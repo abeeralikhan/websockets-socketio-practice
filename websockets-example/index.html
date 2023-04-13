@@ -10,5 +10,18 @@
   <script>
     let ws = new WebSocket("ws://localhost:8000");
     console.log(ws);
+
+    // onopen === ws.on('connection', (ws, req) => {})
+    ws.onopen = (event) => {
+      console.log(event);
+      // Following message will be send to the server
+      // once the connection is established
+      ws.send("I'm so excited to be connected with you!");
+    };
+
+    // onmessage === ws.on('message', (message) => {})
+    ws.onmessage = (message) => {
+      console.log(message.data);
+    };
   </script>
 </html>
