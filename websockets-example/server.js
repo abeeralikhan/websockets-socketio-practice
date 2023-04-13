@@ -1,31 +1,46 @@
 const { createServer } = require("http");
 const { WebSocketServer } = require("ws");
 
+const PORT = 8080;
+
 const server = createServer((req, res) => {
-  res.end("Hello from HTTP server");
+  console.log("Server hit!");
+  res.end("Successfully connected");
 });
 
-// wss --> Websocket Server
 const wss = new WebSocketServer({ server });
 
 wss.on("headers", (headers, req) => {
-  // This runs when the handshake is in process
-  // We can customize the headers
   console.log(headers);
 });
 
-// Websocket Server (wss) --> Websocket (ws)
-// connection --> open
 wss.on("connection", (ws, req) => {
-  // This runs when the connection is established
-  // Handshake is completed
-  ws.send("Welcome to the server!!");
-
-  // Once the connection is established
-  // we can start listening to messages from the server
+  ws.send("We're now connected");
   ws.on("message", (data) => {
     console.log(data.toString());
   });
+  sendNewMessages(ws);
+  console.log("The socket connection is open!");
 });
 
-server.listen(8000);
+const sendNewMessages = (ws) => {
+  let count = 1;
+  let timerId;
+  timerId = setInterval(() => {
+    if (count == 10) {
+      clearInterval(timerId);
+      ws.send(`It was nice talking to you, Tada!`);
+      ws.close();
+    }
+    ws.send(`Message #${count}`);
+    count += 1;
+  }, 1000);
+};
+
+wss.on("close", () => {
+  console.log("The socket connection is closed!");
+});
+
+server.listen(PORT, () => {
+  console.log(`Server is listening at http://localhost:${PORT}`);
+});
