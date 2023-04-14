@@ -4,23 +4,117 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+      integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+      crossorigin="anonymous"
+    />
     <title>Chat App - Example</title>
+    <style>
+      input {
+        width: 100%;
+        height: 35px;
+      }
+      #messages {
+        list-style-type: none;
+        padding: 0;
+
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 1rem;
+        margin-top: 2rem;
+      }
+      #messages li {
+        padding: 7px 15px;
+        width: max-content;
+        background-color: #333;
+        border-radius: 100vw;
+        color: white;
+        align-self: flex-start;
+      }
+
+      #messages li.my-message {
+        align-self: flex-end;
+        background-color: seagreen;
+      }
+
+      h1 {
+        text-align: center;
+      }
+    </style>
   </head>
   <body>
-    <h1>Chat App</h1>
+    <header>
+      <h1>Chat App</h1>
+    </header>
+    <div class="container">
+      <div class="row">
+        <div>
+          <form id="message-form">
+            <div class="col-sm-10">
+              <input
+                id="user-message"
+                type="text"
+                placeholder="Enter your message"
+              />
+            </div>
+            <div class="col-sm-2">
+              <input class="btn btn-primary" type="submit" value="Send!" />
+            </div>
+          </form>
+        </div>
+      </div>
+      <ul id="messages">
+        <!-- THIS WILL BE POPULATED BY JAVASCRIPT! -->
+      </ul>
+    </div>
   </body>
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io("http://localhost:8001");
+    const form = document.querySelector("#message-form");
+    const messages = document.querySelector("#messages");
+    const inputField = document.querySelector("#user-message");
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const newMessage = inputField.value;
+      inputField.value = "";
+
+      if (!newMessage) return;
+
+      const newMessageLi = createNewMessageLi(newMessage);
+      newMessageLi.classList.add("my-message");
+      messages.append(newMessageLi);
+
+      socket.emit("newMessageFromClient", { text: newMessage, id: socket.id });
+    });
 
     socket.on("connect", () => {
       console.log(socket.id);
 
+      // Emitting a named event to server
       socket.emit("clientResponse", {
         message: "Client connected successfully",
       });
     });
 
+    socket.on("newMessageFromServer", (data) => {
+      if (data.id === socket.id) return;
+      const newMessageLi = createNewMessageLi(data.text);
+      messages.append(newMessageLi);
+    });
+
+    const createNewMessageLi = (text) => {
+      const newMessageLi = document.createElement("li");
+      newMessageLi.innerText = text;
+      return newMessageLi;
+    };
+
+    // Listening to a named event from client
     socket.on("serverResponse", (response) => {
       console.log("serverResponse", response);
     });

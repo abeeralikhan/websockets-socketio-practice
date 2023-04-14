@@ -16,9 +16,9 @@ const io = socketio(server);
 io.on("connection", (socket) => {
   console.log(socket.id);
 
-  socket.on("clientResponse", (response) => {
-    console.log("clientResponse", response);
+  // Listening to individual sockets
+  socket.on("newMessageFromClient", (data) => {
+    // Broadcasting a message to all connected sockets
+    io.emit("newMessageFromServer", { text: data.text, id: data.id });
   });
-
-  socket.emit("serverResponse", { message: "Server connected successfully" });
 });
